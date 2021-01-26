@@ -4,10 +4,16 @@ class Table():
     def __init__(self, table_name, *args):
         self.table = table_name
         self.columns = '(%s)' %','.join(args)
+        self.columnList = args
 
         if isnewtable(table_name):
+            create_data = ''
+            for column in self.columnList:
+                create_data += '%s varchar(100),' %column
+
             cur = mysql.connection.cursor()
-            cur.execute(('CREATE TABLE %s%s' %(self.table, self.columns))
+            print('CREATE TABLE %s(%s)' %(self.table, create_data[:len(create_data)-1]))
+            cur.execute('CREATE TABLE %s%s' %(self.table, create_data[:len(create_data)-1]))
             cur.close()
 
     #get all the values from the table
@@ -47,14 +53,35 @@ class Table():
         for arg in args: #convert data into string mysql format
             data += "\"%s\"," %(arg)
 
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO %s%s VALUES(%s)" % (self.table, self.columns, data[:len(data) - 1]))
+        mysql.connection.commit()
+        cur.close()
 
+#execute mysql code from python
+def sql_raw(execution):
+    cur = mysql.connection.cursor()
+    cur.execute(execution)
+    mysql.connection.commit()
+    cur.close()
+
+#check if table already exists
 def isnewtable(tableName):
     cur = mysql.connection.cursor()
 
-    try:
-        result = cur.execute('SELECT * from %s' %stableName)
+    try: #attempt to get data from table
+        result = cur.execute("SELECT * from %s" %tableName)
         cur.close()
     except:
         return True
     else:
         return False
+
+#check if user already exists
+def isnewuser(username):
+    #access the users table and get all values from column "username"
+    users = Table("users", "name", "email", "username", "password")
+    data = users.getall()
+    usernames = [user.get('username') for user in data]
+
+    return False if username in usernames else True
