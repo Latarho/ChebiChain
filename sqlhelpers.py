@@ -28,7 +28,7 @@ class Table():
         data = {}; cur = mysql.connection.cursor()
         result = cur.execute("SELECT * FROM %s WHERE %s = \"%s\"" %(self.table, search, value))
         if result > 0: data = cur.fetchone()
-        cur.close(); return
+        cur.close(); return data
 
     #delete a value from the table based on column's data
     def deleteone(self, search, value):
